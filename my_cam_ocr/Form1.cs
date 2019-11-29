@@ -11,6 +11,9 @@ using System.Drawing.Imaging;
 using System.Collections;
 
 using utility;
+using System.Collections.Generic;
+using System.IO;
+
 namespace my_cam_ocr
 {
 
@@ -35,7 +38,7 @@ namespace my_cam_ocr
         string version = "0.1"; //版本說明
         string srt_path = "";
         string srt_dir = "";
-        double skip_time = 0.5; // half second
+        double skip_time = 0.2; // half second
         bool isRecording = false;
         private string mn = "";
         private const int WH_KEYBOARD_LL = 13;
@@ -164,10 +167,10 @@ namespace my_cam_ocr
         }
         public void thread_msc()
         {
-            while(true)
+            while (true)
             {
                 //Thread.Sleep(1000);
-                Thread.Sleep(10);                
+                Thread.Sleep(10);
                 for (int i = 0; i < videoOption.bps.Count; i++)
                 {
                     VD vd = (VD)videoOption.bps[i];
@@ -176,23 +179,25 @@ namespace my_cam_ocr
                 videoOption.bps.RemoveRange(0, videoOption.bps.Count);
                 //GC.Collect();
 
-                if (isRecording==false)
+                if (isRecording == false)
                 {
 
                     //GC.Collect();
                     //write_finish = true;
                     break;
                 }
-                
+
             }
-          
+
         }
+
         public void thread_sc()
         {
-            int step_frame = 0;                        
-            bool is_first = true;           
+            int step_frame = 0;
+            bool is_first = true;
             Bitmap bitmap;
             string last_ocr_text = "";
+            string cmd = "";
             while (true)
             {
                 if (isRecording == false)
@@ -200,32 +205,85 @@ namespace my_cam_ocr
                     //write_finish = true;
                     sc.Abort();
                     return;
-                }                                                                              
+                }
                 bitmap = CaptureScreen(true, videoOption.V_l, videoOption.V_t, videoOption.V_w, videoOption.V_h);
-                if(bitmap == null)
+                if (bitmap == null)
                 {
-                    Thread.Sleep(15);                    
+                    Thread.Sleep(15);
                     continue;
                 }
+
+
                 //run image filter
+
+                //List<int> keep_colors = new List<int>();
+                //keep_colors.Add(my.RGBtoInt(50, 106, 157));
+                //keep_colors.Add(my.RGBtoInt(255, 255, 255));
+                //my.keep_rgb(ref bitmap, keep_colors, 30);
+
                 //image resize
                 string output_bitmap_path = my.pwd() + "\\tesseract-ocr\\temp.png";
-                                
                 bitmap.Save(output_bitmap_path);
-                
-                //run ocr
-                string TESSDATA_PREFIX = my.pwd() + "\\Tesseract-OCR\\tessdata";
-                TESSDATA_PREFIX = TESSDATA_PREFIX.Replace("\\", "/");
-                string cmd = "chcp 65001 && cd /d " + my.pwd() + "\\tesseract-ocr && set TESSDATA_PREFIX="+ TESSDATA_PREFIX + "&& tesseract.exe temp.png temp -l eng+chi_tra";
-                Console.Write(cmd);
+                bitmap.Dispose();
+                //cmd = "cd /d " + my.pwd() + "\\tesseract-ocr && convert.exe temp.png -colorspace HSB -channel 2 -separate +channel -white-threshold 35% -negate -lat 50x50+5% -negate -morphology erode octagon:1 temp.png";
+                //my.system(cmd);
+                cmd = "cd /d " + my.pwd() + "\\tesseract-ocr && convert temp.png -clone 0 -channel rgba -fuzz 20% -fill none +opaque \"#ffffff\"  -clone 0 -channel rgba -fuzz 20% -fill none +opaque \"#4084c2\"  -delete 0 -compose plus -composite -compose over -background white -flatten temp.png";
                 my.system(cmd);
 
+                cmd = "cd /d " + my.pwd() + "\\tesseract-ocr && python clear.py";
+                my.system(cmd);
+                UpdateUI_Picture(output_bitmap_path, pbox1);
+                //run ocr
+                string TESSDATA_PREFIX = my.pwd() + "\\Tesseract-OCR";
+                TESSDATA_PREFIX = TESSDATA_PREFIX.Replace("\\", "/");
+                //cmd = "cd /d " + my.pwd() + "\\tesseract-ocr && set TESSDATA_PREFIX=" + TESSDATA_PREFIX + "&& tesseract.exe temp.png temp -l eng";
+                //Console.Write(cmd);
+                //my.system(cmd);
+                //string data = my.b2s(my.file_get_contents(my.pwd() + "\\tesseract-ocr\\temp.txt"));
+                //data = my.UTF8toBig5(data);
 
-                step_frame++;                
-                Thread.Sleep( Convert.ToInt32(skip_time*1000) ); //skip half second
+                //UpdateUI_LabelText(data, output_label);
+
+                step_frame++;
+                Thread.Sleep(Convert.ToInt32(skip_time * 1000)); //skip half second
             }
         }
+        private delegate void UpdateUICallBack_Picture(String filepath, PictureBox ctl);
+        private void UpdateUI_Picture(String value, PictureBox ctl)
+        {
+            if (this.InvokeRequired)
+            {
+                UpdateUICallBack_Picture uu = new UpdateUICallBack_Picture(UpdateUI_Picture);
+                this.Invoke(uu, value, ctl);
+            }
+            else
+            {
+                try
+                {
+                    using (FileStream stream = new FileStream(value, FileMode.Open, FileAccess.Read))
+                    {
+                        ctl.Image = Image.FromStream(stream);
+                    }
+                }
+                catch (Exception e)
+                {
 
+                }
+            }
+        }
+        private delegate void UpdateUICallBack_LabelText(string value, Control ctl);
+        private void UpdateUI_LabelText(string value, Control ctl)
+        {
+            if (this.InvokeRequired)
+            {
+                UpdateUICallBack_LabelText uu = new UpdateUICallBack_LabelText(UpdateUI_LabelText);
+                this.Invoke(uu, value, ctl);
+            }
+            else
+            {
+                ctl.Text = value;
+            }
+        }
         public Form1()
         {
             InitializeComponent();
@@ -295,13 +353,13 @@ namespace my_cam_ocr
             f2.Show();
             f2.UI_Init();
 
-            srt_dir = my.pwd() + "\\OUTPUT";            
+            srt_dir = my.pwd() + "\\OUTPUT";
             log(srt_path);
             if (!my.is_dir(srt_dir))
             {
                 my.mkdir(srt_dir);
             }
-            srt_path = srt_dir + "\\" + my.date("Y-m-d_H_i_s")+".srt";
+            srt_path = srt_dir + "\\" + my.date("Y-m-d_H_i_s") + ".srt";
 
 
 
@@ -357,7 +415,7 @@ namespace my_cam_ocr
             Bitmap result = new Bitmap(w, h, PixelFormat.Format24bppRgb);
             try
             {
-                
+
                 using (Graphics g = Graphics.FromImage(result))
                 {
                     //Screen.PrimaryScreen.Bounds.Size
@@ -392,7 +450,7 @@ namespace my_cam_ocr
         {
             switch (run_btn.Text)
             {
-                case "開始辨識 (F2)":                    
+                case "開始辨識 (F2)":
                     renew_path();
                     isRecording = true;
                     run_btn.Text = "停止辨識 (F2)";

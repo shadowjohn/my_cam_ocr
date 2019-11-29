@@ -15,6 +15,9 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 
 
 namespace utility
@@ -271,6 +274,160 @@ namespace utility
             TimeSpan span = dt - UnixEpoch;
             long microseconds = span.Ticks / (TimeSpan.TicksPerMillisecond / 1000);
             return microseconds.ToString();
+        }
+        public byte[] file_get_contents(string url)
+        {
+            if (url.ToLower().IndexOf("http:") > -1)
+            {
+                // URL                 
+
+                HttpWebRequest request = null;
+                HttpWebResponse response = null;
+                byte[] byteData = null;
+
+                request = (HttpWebRequest)WebRequest.Create(url);
+                request.Timeout = 60000;
+                request.Proxy = null;
+                request.UserAgent = "user_agent','Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1)";
+                //request.Referer = getSystemKey("HTTP_REFERER");
+                response = (HttpWebResponse)request.GetResponse();
+                Stream stream = response.GetResponseStream();
+                byteData = ReadStream(stream, 32765);
+                response.Close();
+                stream.Close();
+                return byteData;
+            }
+            else
+            {
+                var fs = new FileStream(url, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                using (var sr = new System.IO.StreamReader(fs))
+                {
+
+                    string sContents = sr.ReadToEnd();
+                    sr.Close();
+                    return s2b(sContents);
+                }
+            }
+        }
+        public byte[] s2b(string input)
+        {
+            return System.Text.Encoding.UTF8.GetBytes(input);
+        }
+        public string b2s(byte[] input)
+        {
+            return System.Text.Encoding.UTF8.GetString(input);
+        }
+        public string UTF8toBig5(string strInput)
+        {
+            byte[] strut8 = System.Text.Encoding.Unicode.GetBytes(strInput);
+            byte[] strbig5 = System.Text.Encoding.Convert(System.Text.Encoding.Unicode, System.Text.Encoding.Default, strut8);
+            return System.Text.Encoding.Default.GetString(strbig5);
+        }
+        private byte[] ReadStream(Stream stream, int initialLength)
+        {
+            if (initialLength < 1)
+            {
+                initialLength = 32768;
+            }
+            byte[] buffer = new byte[initialLength];
+            int read = 0;
+            int chunk;
+            while ((chunk = stream.Read(buffer, read, buffer.Length - read)) > 0)
+            {
+                read += chunk;
+                if (read == buffer.Length)
+                {
+                    int nextByte = stream.ReadByte();
+                    if (nextByte == -1)
+                    {
+                        return buffer;
+                    }
+                    byte[] newBuffer = new byte[buffer.Length * 2];
+                    Array.Copy(buffer, newBuffer, buffer.Length);
+                    newBuffer[read] = (byte)nextByte;
+                    buffer = newBuffer;
+                    read++;
+                }
+            }
+            byte[] bytes = new byte[read];
+            Array.Copy(buffer, bytes, read);
+            return bytes;
+        }
+        public int[] getRGB(Bitmap image)
+        {
+            int[] returns = null;
+            if (image.PixelFormat == PixelFormat.Format8bppIndexed)
+            {
+                BitmapData bitmapData = image.LockBits(
+                                                new Rectangle(0, 0, image.Width, image.Height),
+                                                ImageLockMode.ReadWrite,
+                                                image.PixelFormat);
+                int noOfPixels = image.Width * image.Height;
+                int colorDepth = Bitmap.GetPixelFormatSize(image.PixelFormat);
+                int step = colorDepth / 8;
+                byte[] bytes = new byte[noOfPixels * step];
+                IntPtr address = bitmapData.Scan0;
+                Marshal.Copy(address, bytes, 0, bytes.Length);
+                ////////////////////////////////////////////////
+                ///
+                returns = (int[])bytes.Clone();
+                ///
+                ////////////////////////////////////////////////
+                Marshal.Copy(bytes, 0, address, bytes.Length);
+                image.UnlockBits(bitmapData);
+            }
+            else
+            {
+                throw new Exception("8bpp indexed image required");
+            }
+            return returns;
+        }
+   
+        public Bitmap rgbArrayToBitmap(byte[] buffer, int width, int height)
+        {
+            Bitmap b = new Bitmap(width, height, PixelFormat.Format24bppRgb);
+
+            Rectangle BoundsRect = new Rectangle(0, 0, width, height);
+            BitmapData bmpData = b.LockBits(BoundsRect,
+                                            ImageLockMode.WriteOnly,
+                                            b.PixelFormat);
+
+            IntPtr ptr = bmpData.Scan0;
+
+            // add back dummy bytes between lines, make each line be a multiple of 4 bytes
+            int skipByte = bmpData.Stride - width * 3;
+            byte[] newBuff = new byte[buffer.Length + skipByte * height];
+            for (int j = 0; j < height; j++)
+            {
+                Buffer.BlockCopy(buffer, j * width * 3, newBuff, j * (width * 3 + skipByte), width * 3);
+            }
+
+            // fill in rgbValues
+            Marshal.Copy(newBuff, 0, ptr, newBuff.Length);
+            b.UnlockBits(bmpData);
+            return b;
+        }
+        public int RGBtoInt(int r, int g, int b)
+        {
+            return (r << 0) | (g << 8) | (b << 16);
+        }
+        public void keep_rgb(ref Bitmap im, List<int> arr, int range = 5)
+        {
+            int[] mem = getRGB(im);
+            for (int i = 0, max_i = mem.Length; i < max_i; i++)
+            {
+                for (int j = 0, max_j = arr.Count; j < max_j; j++)
+                {
+                    if ((arr[j] - mem[i]) <= range)
+                    {
+                        im.SetPixel(i % im.Width, i / im.Height, Color.Red);
+                    }
+                    else
+                    {
+                        im.SetPixel(i % im.Width, i / im.Height, Color.Black);
+                    }
+                }
+            }
         }
     }
 

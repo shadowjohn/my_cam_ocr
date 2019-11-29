@@ -35,6 +35,9 @@
             this.GoToDir_Btn = new System.Windows.Forms.Button();
             this.HelpMe_Btn = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.output_label = new System.Windows.Forms.Label();
+            this.pbox1 = new System.Windows.Forms.PictureBox();
+            ((System.ComponentModel.ISupportInitialize)(this.pbox1)).BeginInit();
             this.SuspendLayout();
             // 
             // run_btn
@@ -79,11 +82,31 @@
             this.timer1.Interval = 30;
             this.timer1.Tick += new System.EventHandler(this.Timer1_Tick);
             // 
+            // output_label
+            // 
+            this.output_label.AutoSize = true;
+            this.output_label.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.output_label.Location = new System.Drawing.Point(12, 194);
+            this.output_label.Name = "output_label";
+            this.output_label.Size = new System.Drawing.Size(2, 14);
+            this.output_label.TabIndex = 4;
+            // 
+            // pbox1
+            // 
+            this.pbox1.Location = new System.Drawing.Point(14, 126);
+            this.pbox1.Name = "pbox1";
+            this.pbox1.Size = new System.Drawing.Size(544, 58);
+            this.pbox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pbox1.TabIndex = 5;
+            this.pbox1.TabStop = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(368, 121);
+            this.ClientSize = new System.Drawing.Size(570, 334);
+            this.Controls.Add(this.pbox1);
+            this.Controls.Add(this.output_label);
             this.Controls.Add(this.HelpMe_Btn);
             this.Controls.Add(this.GoToDir_Btn);
             this.Controls.Add(this.run_btn);
@@ -95,7 +118,9 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Resize += new System.EventHandler(this.Form1_Resize);
+            ((System.ComponentModel.ISupportInitialize)(this.pbox1)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -106,6 +131,8 @@
         private System.Windows.Forms.Button GoToDir_Btn;
         private System.Windows.Forms.Button HelpMe_Btn;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Label output_label;
+        private System.Windows.Forms.PictureBox pbox1;
     }
 }
 

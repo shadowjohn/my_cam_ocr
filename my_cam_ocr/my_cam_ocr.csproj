@@ -197,6 +197,9 @@
     <None Include="Tesseract-OCR\tessdata\eng.traineddata">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Tesseract-OCR\tessdata\osd.traineddata">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Tesseract-OCR\tessdata\tessconfigs\batch">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -227,17 +230,23 @@
     <Content Include="Tesseract-OCR\classifier_tester.exe" />
     <Content Include="Tesseract-OCR\cntraining.exe" />
     <Content Include="Tesseract-OCR\combine_tessdata.exe" />
+    <Content Include="Tesseract-OCR\convert.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Tesseract-OCR\dawg2wordlist.exe" />
     <Content Include="Tesseract-OCR\doc\eurotext.tif" />
     <Content Include="Tesseract-OCR\doc\phototest.tif" />
+    <Content Include="Tesseract-OCR\gzip.exe" />
     <Content Include="Tesseract-OCR\java\ScrollView.jar" />
     <Content Include="Tesseract-OCR\mftraining.exe" />
     <Content Include="Tesseract-OCR\output\ocr_output_buffer.txt" />
     <Content Include="Tesseract-OCR\shapeclustering.exe" />
+    <Content Include="Tesseract-OCR\tar.exe" />
     <Content Include="Tesseract-OCR\tesseract.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Tesseract-OCR\unicharset_extractor.exe" />
+    <Content Include="Tesseract-OCR\Uninstall.exe" />
     <Content Include="Tesseract-OCR\wordlist2dawg.exe" />
     <None Include="pic\lt.png" />
     <None Include="pic\t.png" />

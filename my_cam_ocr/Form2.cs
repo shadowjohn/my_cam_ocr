@@ -9,8 +9,8 @@ namespace my_cam_ocr
     {
         public bool can_drag = true;
         bool dragging = false;
-        int min_x = 200;
-        int min_y = 200;
+        int min_x = 50;
+        int min_y = 50;
         public void UI_Init()
         {
             c.Left = this.Width / 2 - 25;
